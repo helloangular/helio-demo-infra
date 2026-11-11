@@ -1,0 +1,17 @@
+{
+  "application": "demo-api",
+  "version": "1.0.0",
+  "environment": "sandbox",
+  "environment_type": "development",
+  "deploy_target": "ecs-fargate",
+  "archetype": "http-service",
+  "runtime_profile": "node-http",
+  "attachments": [],
+  "public_ip": false,
+  "image": "helio-test-images@sha256:91fc9c3924b93f76adc9cd36a0bb93e53885ff8e97df10233caa45bb432789a5",
+  "container_port": 80,
+  "region": "us-east-1",
+  "capabilities": {
+    "ingress": "internal-alb"
+  }
+}

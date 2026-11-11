@@ -1,0 +1,96 @@
+name: "Helio infrastructure: demo-api"
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      helio_release_id:
+        description: "Helio release (logging only)"
+        required: false
+        type: string
+      helio_execution_id:
+        description: "Helio execution (logging only)"
+        required: false
+        type: string
+      helio_stage_id:
+        description: "Helio stage (logging only)"
+        required: false
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: helio-infra-demo-api
+  cancel-in-progress: false
+env:
+  HELIO_URL: ${{ vars.HELIO_URL }}
+jobs:
+  plan:
+    name: Plan
+    runs-on:
+      - self-hosted
+      - apex-live
+    outputs:
+      deploy_id: ${{ steps.plan.outputs.deploy_id }}
+      plan_sha256: ${{ steps.plan.outputs.plan_sha256 }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Ask Helio for a plan
+        id: plan
+        run: |
+          set -euo pipefail
+          export HELIO_CI_CREDENTIALS="$HOME/.helio-demo/apex-ci.json"
+          python3 scripts/helio_infra.py plan
+      - name: Keep the plan summary
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: helio-plan-summary
+          path: helio-plan-summary.json
+          if-no-files-found: error
+  apply:
+    name: Apply
+    needs:
+      - plan
+    runs-on:
+      - self-hosted
+      - apex-live
+    environment: production
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Apply the reviewed plan through Helio
+        env:
+          HELIO_DEPLOY_ID: ${{ needs.plan.outputs.deploy_id }}
+          HELIO_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
+        run: |
+          set -euo pipefail
+          export HELIO_CI_CREDENTIALS="$HOME/.helio-demo/apex-ci.json"
+          export HELIO_APPROVER_CREDENTIALS="$HOME/.helio-demo/apex-approver.json"
+          python3 scripts/helio_infra.py apply
+  verify:
+    name: Verify
+    needs:
+      - plan
+      - apply
+    runs-on:
+      - self-hosted
+      - apex-live
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Verify the stack through Helio
+        env:
+          HELIO_DEPLOY_ID: ${{ needs.plan.outputs.deploy_id }}
+        run: |
+          set -euo pipefail
+          export HELIO_CI_CREDENTIALS="$HOME/.helio-demo/apex-ci.json"
+          python3 scripts/helio_infra.py verify
+      - name: Keep the verification result
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: helio-infra-verify
+          path: helio-infra-verify.json
+          if-no-files-found: error
