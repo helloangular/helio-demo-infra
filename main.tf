@@ -13,8 +13,8 @@ module "service" {
 
   name           = "demo-api-sandbox-us-east-1"
   region         = "us-east-1"
-  image          = "helio-test-images@sha256:91fc9c3924b93f76adc9cd36a0bb93e53885ff8e97df10233caa45bb432789a5"
-  container_port = 80
+  image          = "helio-test-images@sha256:aeae9f4cdaf6e063849654f0363ff0c5a5b047597dd9b8c857e0a76013229485"
+  container_port = 8080
 
   assign_public_ip = false
   launch_type      = "FARGATE"

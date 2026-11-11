@@ -123,8 +123,24 @@ def plan():
     service['cloud_account_id'] = account[0]['id']
     # The repository names the image; Helio's account record supplies the registry.
     service['image'] = (account[0]['account_identifier'] + '.dkr.ecr.' + service['region'] + '.amazonaws.com/' + service['image'])
-    status, body = call('POST', '/deploy/batch', token, {'deployments': [service]},
-                        {'Idempotency-Key': 'provision:' + SHA[:12] + ':' + RUN})
+    def request():
+        return call('POST', '/deploy/batch', token, {'deployments': [service]},
+                    {'Idempotency-Key': 'provision:' + SHA[:12] + ':' + RUN})
+    status, body = request()
+    if status == 409 and body.get('active_status') == 'cost_review' and body.get('active_deployment_id'):
+        # An earlier plan for this stack was never approved. Only the newest
+        # plan may go to the gate, so withdraw the old one and ask again.
+        old = body['active_deployment_id']
+        cancelled, reply = call('POST', '/deploy/' + old + '/cancel-infra', token,
+                                {'reason': 'Superseded by commit ' + SHA[:12] + ', run ' + RUN})
+        if cancelled >= 300:
+            fail('Could not withdraw the earlier unapproved plan ' + old + ' (HTTP ' + str(cancelled) + '): ' + json.dumps(reply)[:300])
+        print('Withdrew the earlier unapproved plan ' + old)
+        for _ in range(12):
+            status, body = request()
+            if status != 409:
+                break
+            time.sleep(5)
     if status >= 300:
         fail('Helio refused the request (HTTP ' + str(status) + '): ' + json.dumps(body)[:600])
     deploy_id = body['deployments'][0].get('deploy_id')
