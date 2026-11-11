@@ -4,19 +4,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      helio_release_id:
-        description: "Helio release (logging only)"
-        required: false
-        type: string
-      helio_execution_id:
-        description: "Helio execution (logging only)"
-        required: false
-        type: string
-      helio_stage_id:
-        description: "Helio stage (logging only)"
-        required: false
-        type: string
 permissions:
   contents: read
 concurrency:
