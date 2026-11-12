@@ -20,6 +20,8 @@ module "service" {
   assign_public_ip = false
   public_endpoint  = true
   launch_type      = "FARGATE"
-  autoscale        = false
+  autoscale        = true
+  min_capacity     = 1
+  max_capacity     = 3
   enable_db        = false
 }

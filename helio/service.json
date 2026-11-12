@@ -14,5 +14,8 @@
   "region": "us-east-1",
   "capabilities": {
     "ingress": "public-alb"
-  }
+  },
+  "autoscale": true,
+  "min_capacity": 1,
+  "max_capacity": 3
 }
