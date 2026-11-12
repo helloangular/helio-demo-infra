@@ -14,14 +14,12 @@ module "service" {
 
   name           = "demo-api-sandbox-us-east-1"
   region         = "us-east-1"
-  image          = "helio/demo-api-sandbox-us-east-1@sha256:c2721fbf059bc1b3ce78832472b87ff2cb13ee67ecc12cd3e37d8628d8fc208d"
+  image          = "helio/demo-api-sandbox-us-east-1@sha256:871808f91939874db843b9da9a7eac5be54abfc22feb53047279fef08adb66bc"
   container_port = 8080
 
   assign_public_ip = false
   public_endpoint  = true
   launch_type      = "FARGATE"
-  autoscale        = true
-  min_capacity     = 1
-  max_capacity     = 3
+  autoscale        = false
   enable_db        = false
 }
